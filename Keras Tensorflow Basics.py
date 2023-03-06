@@ -41,7 +41,8 @@ for i in range(1000):
 
 # convert the train labels and samples lists into numpy arrays
 # then shuffle them to eliminate ordering
-# finally, we will scale the training samples down to between 0 to 1
+# finally, we will scale the training samples down to between 0 and 1
+
 train_samples = np.array(train_samples)
 train_labels = np.array(train_labels)
 train_samples, train_labels = shuffle(train_samples, train_labels)

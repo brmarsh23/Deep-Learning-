@@ -92,3 +92,18 @@ model = Sequential([
 # Let's print the model out to see what it looks like
 
 print(model.summary())
+
+########################################################################
+# Now, we will train the Neural Network
+########################################################################
+
+# Now that the model has been created, we must compile it and specify the optimizer,
+# learning rates, and metrics
+
+model.compile(optimizer=Adam(learning_rate=0.0001), loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+# Time to train using the fit function. The first parameter, X, is our input data. Y is
+# our label data. The batch size is specified next, followed by the number of epochs,
+# and the shuffle parameter. Finally, verbose is set to 2 so that we can see the results of each epoch.
+
+model.fit(x=scaled_train_samples, y=train_labels, batch_size=10, epochs=30, verbose=2)

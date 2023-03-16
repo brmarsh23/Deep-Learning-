@@ -106,4 +106,26 @@ model.compile(optimizer=Adam(learning_rate=0.0001), loss='sparse_categorical_cro
 # our label data. The batch size is specified next, followed by the number of epochs,
 # and the shuffle parameter. Finally, verbose is set to 2 so that we can see the results of each epoch.
 
-model.fit(x=scaled_train_samples, y=train_labels, batch_size=10, epochs=30, verbose=2)
+# model.fit(x=scaled_train_samples, y=train_labels, batch_size=10, epochs=30, verbose=2)
+
+# Let's now make a validation dataset that will allow us to test our model
+# With data that it has not been trained on
+# There are two ways to do this using Model.Fit
+# One way is to assign the validation data argument to a pre-made validation dataset
+# The other is to assign the validation split argument to a decimal between 0 and 1
+# This will split the training set into a fraction to be used as the validation set
+# Since the validation data is selected before the default shuffling in model.fit,
+# We need to make sure that the dataset is shuffled ahead of time (which we did when
+# We created the dataset)
+
+model.fit(
+      x=scaled_train_samples,
+      y=train_labels,
+      validation_split=0.1,
+      batch_size=10,
+      epochs=30,
+      verbose=2)
+
+# With this training set up, we will see loss and accuracy metrics
+# for the training and validation datasets
+

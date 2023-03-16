@@ -124,6 +124,7 @@ model.fit(
       validation_split=0.1,
       batch_size=10,
       epochs=30,
+      shuffle=True,
       verbose=2)
 
 # With this training set up, we will see loss and accuracy metrics

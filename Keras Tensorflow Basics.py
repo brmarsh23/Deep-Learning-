@@ -68,6 +68,39 @@ scaled_train_samples = scaler.fit_transform(train_samples.reshape(-1,1))
 #for i in scaled_train_samples:
     #print(i)
 
+
+# time to create the test set. This is the data that the trained model will perform inference on
+
+test_labels =  []
+test_samples = []
+
+for i in range(10):
+    # The 5% of younger individuals who did experience side effects
+    random_younger = randint(13,64)
+    test_samples.append(random_younger)
+    test_labels.append(1)
+
+    # The 5% of older individuals who did not experience side effects
+    random_older = randint(65,100)
+    test_samples.append(random_older)
+    test_labels.append(0)
+
+for i in range(200):
+    # The 95% of younger individuals who did not experience side effects
+    random_younger = randint(13,64)
+    test_samples.append(random_younger)
+    test_labels.append(0)
+
+    # The 95% of older individuals who did experience side effects
+    random_older = randint(65,100)
+    test_samples.append(random_older)
+    test_labels.append(1)
+
+test_labels = np.array(test_labels)
+test_samples = np.array(test_samples)
+test_labels, test_samples = shuffle(test_labels, test_samples)
+scaled_test_samples = scaler.fit_transform(test_samples.reshape(-1,1))
+
 ########################################################################
 # Now, we will create the sequential model using Tensorflow
 ########################################################################
@@ -130,3 +163,27 @@ model.fit(
 # With this training set up, we will see loss and accuracy metrics
 # for the training and validation datasets
 
+# Now it is time to make predicitons with the trained model on the test set
+# To do this, we use the predict method, passing the test set as input
+# The output of this method is an array of predictions
+
+predictions = model.predict(
+      x=scaled_test_samples
+    , batch_size=10
+    , verbose=0
+)
+
+# let's take a look at the predicitons array
+
+for i in predictions:
+    print(i)
+
+# this array consists of predicted probabilities of both classes for each inference performed by the model
+# on the test data. notice that the probabilities add up to 1.
+# this next piece shows what the model predicitons are. I.e. the model chooses the max probability as its answer.
+# Notice that even if the predicted probabilities are close, the model will choose the higher probability.
+
+rounded_predictions = np.argmax(predictions, axis=-1)
+
+for i in rounded_predictions:
+    print(i)

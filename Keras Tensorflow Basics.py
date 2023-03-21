@@ -6,6 +6,9 @@ import numpy as np
 from random import randint
 from sklearn.utils import shuffle
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import confusion_matrix
+import itertools
+import matplotlib.pyplot as plt
 
 # These are the libraries needed to create the deep neural network model
 import tensorflow as tf
@@ -14,6 +17,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Activation, Dense
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.metrics import categorical_crossentropy
+
 
 ########################################################################
 # In this section we will create a dataset along with corresponding labels for training
@@ -185,5 +189,58 @@ for i in predictions:
 
 rounded_predictions = np.argmax(predictions, axis=-1)
 
-for i in rounded_predictions:
-    print(i)
+#for i in rounded_predictions:
+    #print(i)
+
+###################################################################
+# In this section, we will create a confusion matrix to determine how accurately the model performed
+# on the test dataset
+###################################################################
+
+# First, define the confusion matrix method. This method is from SKLearn's website
+
+def plot_confusion_matrix(cm, classes,
+                        normalize=False,
+                        title='Confusion matrix',
+                        cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    """
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    print(cm)
+
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, cm[i, j],
+            horizontalalignment="center",
+            color="white" if cm[i, j] > thresh else "black")
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+
+# Next, we will create the confusion matrix itself, using the SKLearn method
+
+cm = confusion_matrix(y_true=test_labels, y_pred=rounded_predictions)
+
+# Next, we will define the labels for the confusion matrix plot
+
+cm_plot_labels = ['no_side_effects','had_side_effects']
+
+# Finally, we will invoke the method and array above and create the confusion matrix
+
+plot_confusion_matrix(cm=cm, classes=cm_plot_labels, title='Confusion Matrix')
+

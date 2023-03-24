@@ -16,6 +16,8 @@ from tensorflow import keras
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Activation, Dense
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import load_model
+from tensorflow.keras.models import model_from_json
 from tensorflow.keras.metrics import categorical_crossentropy
 
 
@@ -243,4 +245,60 @@ cm_plot_labels = ['no_side_effects','had_side_effects']
 # Finally, we will invoke the method and array above and create the confusion matrix
 
 plot_confusion_matrix(cm=cm, classes=cm_plot_labels, title='Confusion Matrix')
+
+###################################################################
+# In this section, we will save and load the model as an example for future work
+###################################################################
+
+# this will save a model at its current state after it was trained so that we could make use of it later.
+# we pass the file name that we want to save it as
+
+model.save('models/medical_trial_model.h5')
+
+# This method of saving will save everything about the model –
+# the architecture, the weights, the optimizer, the state of the optimizer, the learning rate, the loss, etc.
+# We can then load this model and verify that it has the same attributes as the previous model
+# We can also inspect attributes about the model, like the optimizer and loss by calling
+# model.optimizer and model.loss on the loaded model and compare the results to the previously saved model.
+
+new_model = load_model('models/medical_trial_model.h5')
+print(new_model.summary())
+print(new_model.optimizer())
+print(new_model.loss())
+
+# There is another way we save only the architecture of the model.
+# This will not save the model weights, configurations, optimizer, loss or anything else.
+# This only saves the architecture of the model.
+# We can do this by calling model.to_json().
+# This will save the architecture of the model as a JSON string.
+# If we print out the string, we can see exactly what this looks like.
+
+json_string = model.to_json()
+print(json_string)
+
+# Now that we have this saved, we can create a new model from it.
+# First we'll import the needed model_from_json function, and then we can load the model architecture.
+
+model_architecture = model_from_json(json_string)
+print(model_architecture.summary())
+
+# We can also only save the weights of the model.
+# We can do this by calling model.save_weights() and passing in the path and file name
+# to save the weights to with an h5 extension.
+
+model.save_weights('models/my_model_weights.h5')
+
+#At a later point, we could then load the saved weights in to a new model,
+# but the new model will need to have the same architecture as the old model before the weights can be saved.
+
+model2 = Sequential([
+    Dense(units=16, input_shape=(1,), activation='relu'),
+    Dense(units=32, activation='relu'),
+    Dense(units=2, activation='softmax')
+])
+
+model2.load_weights('models/my_model_weights.h5')
+
+# now we can use this model just like the first model we trained, as it has the exact same weights as the trained
+# model.
 

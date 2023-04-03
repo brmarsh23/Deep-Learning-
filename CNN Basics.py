@@ -117,3 +117,43 @@ print(labels)
 # The images shown will have gone through the preprocessing step, so the rgb data has been adjusted for model input.
 # Note that dogs are represented with the one-hot encoding of [0,1], and cats are represented by [1,0].
 
+########################################################################
+# This section will cover building and training the CNN
+########################################################################
+
+model = Sequential([
+    Conv2D(filters=32, kernel_size=(3, 3), activation='relu', padding = 'same', input_shape=(224,224,3)),
+    MaxPool2D(pool_size=(2, 2), strides=2),
+    Conv2D(filters=64, kernel_size=(3, 3), activation='relu', padding = 'same'),
+    MaxPool2D(pool_size=(2, 2), strides=2),
+    Flatten(),
+    Dense(units=2, activation='softmax')
+])
+
+print(model.summary())
+
+model.compile(optimizer=Adam(learning_rate=0.0001), loss='categorical_crossentropy', metrics=['accuracy'])
+
+model.fit(x=train_batches,
+    steps_per_epoch=len(train_batches),
+    validation_data=valid_batches,
+    validation_steps=len(valid_batches),
+    epochs=10,
+    verbose=2
+)
+
+'''
+We need to specify steps_per_epoch to indicate how many batches of samples from our training 
+set should be passed to the model before declaring one epoch complete. Since we have 1000 samples in our training set, 
+and our batch size is 10, then we set steps_per_epoch to be 100, since 100 batches of 10 
+samples each will encompass our entire training set.
+
+We're able to use len(train_batches) as a more general way to specify this value, 
+as the length of train_batches is equal to 100 since it is made up of 100 batches of 10 samples. 
+Similarly, we specify validation_steps in the same fashion but with using valid_batches.
+
+We're specifying 10 as the number of epochs we'd like to run, and setting the verbose parameter to 2, 
+which just specifies the verbosity of the log output printed to the console during training.
+
+'''
+

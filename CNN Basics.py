@@ -155,5 +155,9 @@ Similarly, we specify validation_steps in the same fashion but with using valid_
 We're specifying 10 as the number of epochs we'd like to run, and setting the verbose parameter to 2, 
 which just specifies the verbosity of the log output printed to the console during training.
 
+Notice that the model overfits to the training data. This means that we will need to either:
+1) Work with this current model to reduce overfitting.
+2) Load a pre-trained model and fine-tune it to this dataset. 
+
 '''
 

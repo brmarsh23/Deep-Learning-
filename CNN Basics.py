@@ -31,6 +31,39 @@ def plotImages(images_arr):
     plt.tight_layout()
     plt.show()
 
+def plot_confusion_matrix(cm, classes,
+                          normalize=False,
+                          title='Confusion matrix',
+                          cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    """
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    print(cm)
+
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, cm[i, j],
+            horizontalalignment="center",
+            color="white" if cm[i, j] > thresh else "black")
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+
 #Download the dataset from Kaggle at this link: https://www.kaggle.com/c/dogs-vs-cats/data
 
 # Organize data into train, valid, test dirs
@@ -160,4 +193,38 @@ Notice that the model overfits to the training data. This means that we will nee
 2) Load a pre-trained model and fine-tune it to this dataset. 
 
 '''
+
+########################################################################
+# This section will have us run predicitons on the overtrained CNN
+########################################################################
+
+# Let us take a look at the test data and labels by printing out a batch of 10 test images and labels
+
+test_imgs, test_labels = next(test_batches)
+plotImages(test_imgs)
+print(test_labels)
+
+# Time to create a predicitons array from using model.predict()
+# We will then round out the predicitons to the nearest label using np.round()
+
+predictions = model.predict(x=test_batches, steps=len(test_batches), verbose=0)
+predictions = np.round(predictions)
+
+# Now we will plot the confusion matrix of our results
+
+
+cm = confusion_matrix(y_true=test_batches.classes, y_pred=np.argmax(predictions, axis=-1))
+
+# We transform the one-hot encoded predicted labels to be in the same format as the true labels by only
+# selecting the element with the highest value for each prediction using np.argmax(predictions, axis=-1)
+
+predictions = np.argmax(predictions, axis=-1)
+
+# Using the confusion matrix method that we built at the top of the code, we will now make the confusion matrix
+# First, let's double check the labels so that we know what to pass into the confusion matrix method
+# print(test_batches.class_indices)
+
+# Now that we have our answer, time to plot
+cm_plot_labels = ['cat','dog']
+plot_confusion_matrix(cm=cm, classes=cm_plot_labels, title='Confusion Matrix')
 

@@ -1,6 +1,7 @@
 ########################################################################
 # This file will show the basics of how to utilize a pre-trained CNN for fine-tuning
 # This is a companion file to the "CNN Basics File"
+# The VGG16 paper is linked here: https://arxiv.org/pdf/1409.1556.pdf
 ########################################################################
 
 #Import Section

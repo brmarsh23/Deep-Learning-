@@ -67,9 +67,9 @@ def plot_confusion_matrix(cm, classes,
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
 
-
-# This remakes the dataset in the event that the dataset has been removed
-
+########################################################################
+# This Section remakes the dataset in the event that the dataset has been removed
+########################################################################
 '''
 os.chdir('Data/Dogs and Cats/train')
 if os.path.isdir('train/dog') is False:
@@ -117,17 +117,20 @@ test_batches = ImageDataGenerator(preprocessing_function=tf.keras.applications.v
 imgs, labels = next(train_batches)
 plotImages(imgs)
 print(labels)
-
+########################################################################
 # Now we will import the VGG16 model. This piece of code requires an internet connection
-# Once the model is saved to the computer, this step is no longer needed
-vgg16_model = tf.keras.applications.vgg16.VGG16()
-print(vgg16_model.summary())
+# Once the model is saved to the computer, code is in place that will load the model from disk
+########################################################################
+
+#vgg16_model = tf.keras.applications.vgg16.VGG16()
+#print(vgg16_model.summary())
 
 # This will save the model to disk
 #vgg16_model.save('models/vgg16.h5')
 
 # Use the load model method when you want to use this model from disk instead of downloading it again
-# vgg16_model = load_model('models/medical_trial_model.h5')
+vgg16_model = load_model('models/vgg16.h5')
+print(vgg16_model.summary())
 
 '''
 VGG16 is much more complex and sophisticated and has many more layers than the CNN Basics Model.
@@ -146,11 +149,13 @@ which is from the Keras' Functional API.
 
 print(type(vgg16_model))
 
+########################################################################
 # For now, we're going to go through a process to convert the Functional model to a Sequential model,
 # so that it will be easier for us to work with given our current knowledge.
 # We first create a new model of type Sequential.
 # We then iterate over each of the layers in vgg16_model, except for the last layer,
 # and add each layer to the new Sequential model.
+########################################################################
 
 model = Sequential()
 for layer in vgg16_model.layers[:-1]:
@@ -181,3 +186,28 @@ This output layer will be the only trainable layer in the model.
 model.add(Dense(units=2, activation='softmax'))
 print(model.summary())
 
+########################################################################
+# Time to Compile and then train the model
+########################################################################
+
+model.compile(optimizer=Adam(learning_rate=0.0001), loss='categorical_crossentropy', metrics=['accuracy'])
+
+'''
+Similar to how we've compiled models in previous files, 
+we'll use the Adam optimizer with a learning rate of 0.0001, 
+categorical_crossentropy as our loss, and ‘accuracy' as our metric.
+'''
+
+model.fit(x=train_batches,
+          steps_per_epoch=len(train_batches),
+          validation_data=valid_batches,
+          validation_steps=len(valid_batches),
+          epochs=5,
+          verbose=2
+)
+
+# Only 5 epochs of training this time
+# The most noticeable improvement is that this model is generalizing very well to the validation data,
+# unlike the CNN we built from scratch in the CNN basics file. This is because the vgg16 model was originally
+# trained with images of cats and dogs in distribution (in the original dataset).
+# all we had to do was fine-tune the last layer to recognize only cats or dogs.

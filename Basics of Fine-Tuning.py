@@ -211,3 +211,24 @@ model.fit(x=train_batches,
 # unlike the CNN we built from scratch in the CNN basics file. This is because the vgg16 model was originally
 # trained with images of cats and dogs in distribution (in the original dataset).
 # all we had to do was fine-tune the last layer to recognize only cats or dogs.
+
+########################################################################
+# Now we will predict with the fine-tuned model
+########################################################################
+
+# let's look at the test images. They should be preprocessed in the same way as the training and validation sets
+# Remember, do not shuffle the test images. You want the test images and the test labels to match up.
+
+test_imgs, test_labels = next(test_batches)
+plotImages(test_imgs)
+print(test_labels)
+
+# Time to predict
+
+predictions = model.predict(x=test_batches, steps=len(test_batches), verbose=0)
+
+# Plot the confusion matrix
+
+cm = confusion_matrix(y_true=test_batches.classes, y_pred=np.argmax(predictions, axis=-1))
+cm_plot_labels = ['cat','dog']
+plot_confusion_matrix(cm=cm, classes=cm_plot_labels, title='Confusion Matrix')

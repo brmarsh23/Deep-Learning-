@@ -31,18 +31,41 @@ import random
 import matplotlib.pyplot as plt
 
 ########################################################################
-# Load the MobileNet model from Internet or Disk
+# Create Methods
 ########################################################################
 
-mobile = tf.keras.applications.mobilenet.MobileNet()
-print(mobile.summary())
+def plot_confusion_matrix(cm, classes,
+                          normalize=False,
+                          title='Confusion matrix',
+                          cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    """
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
 
-# This will save the model to disk
-mobile.save('models/MobileNet.h5')
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
 
-# Use the load model method when you want to use this model from disk instead of downloading it again
-#mobile = load_model('MobileNet.h5')
-#print(mobile.summary())
+    print(cm)
+
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, cm[i, j],
+            horizontalalignment="center",
+            color="white" if cm[i, j] > thresh else "black")
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
 
 ########################################################################
 # Organize the RGB Data into Directories and Datasets
@@ -79,7 +102,7 @@ if os.path.isdir('train/0/') is False:
         test_samples = random.sample(os.listdir(f'train/{i}'), 5)
         for k in test_samples:
             shutil.move(f'train/{i}/{k}', f'test/{i}')
-# os.chdir('../..')
+os.chdir('../..')
 
 '''
 After our image data is all organized on disk, we need to create the directory iterators for the train, validation,
@@ -117,3 +140,128 @@ to plot to a confusion matrix later.
 
 '''
 
+########################################################################
+# Load the MobileNet model from Internet or Disk and Adjust for Fine-Tuning
+########################################################################
+
+# mobile = tf.keras.applications.mobilenet.MobileNet()
+# print(mobile.summary())
+
+# This will save the model to disk
+# mobile.save('models/MobileNet.h5')
+
+# Use the load model method when you want to use this model from disk instead of downloading it again
+mobile = load_model('models/MobileNet.h5')
+print(mobile.summary())
+
+# Next, we're going to grab the output from the fifth to last layer of the model
+# and store it in variable x.
+
+x = mobile.layers[-5].output
+
+'''
+We'll be using this to build a new model. 
+This new model will consist of the original MobileNet up to the fifth to last layer. 
+We're not including the last four layers of the original MobileNet.
+
+By looking at the summary of the original model, 
+we can see that by not including the last four layers, we'll be including everything up to 
+and including the last global_average_pooling layer.
+
+Note that the amount of layers that we choose to cut off when you're fine-tuning a model will vary for 
+each application. In this task, removing the last 4 layers works well. So with this setup, 
+we'll be keeping the vast majority of the original MobileNet architecture, which has 88 layers total.
+
+Now, we need to reshape our output from the global_average_pooling layer that we will pass to our 
+output layer, which we're calling output. We use the tf.keras.layers Reshape method to do this.
+This method adds a reshape layer that takes the input of the previous layer (in this case None,1,1,1024)
+and outputs a (None, 1024) layer. 
+
+The output layer will just be a Dense layer with 10 output nodes for the ten corresponding classes, 
+and we'll use the softmax activation function.
+'''
+
+x = tf.keras.layers.Reshape(target_shape=(1024,))(x)
+output = Dense(units=10, activation='softmax')(x)
+
+# Now, we construct the new fine-tuned model, which we're calling fine_tune_Mobilenet.
+
+fine_tune_Mobilenet = Model(inputs=mobile.input, outputs=output)
+
+'''
+Note, you can see by the Model constructor used to create our model, that this is a model 
+that is being created with the Keras Functional API, not the Sequential API that we've worked with 
+in previous files. That's why this format that we're using to create the model may look a little 
+different than what you're used to.
+
+To build the new model, we create an instance of the Model class and specify the inputs to the model to be 
+equal to the input of the original MobileNet, and then we define the outputs of the model to be equal to 
+the output variable we created directly above.
+
+This creates a new model, which is identical to the original MobileNet up to the original model's sixth to 
+last layer. We don't have the last five original MobileNet layers included, but instead we have a new layer,
+the output layer we created with ten output nodes.
+
+Now, we need to choose how many layers we actually want to be trained when we train on our new data set.
+
+We still want to keep a lot of what the original MobileNet has already learned from ImageNet by freezing 
+the weights in many of layers, especially earlier ones, but we do indeed need to train some layers since 
+the model still needs to learn features about this new data set.
+
+I did a little experimenting and found that training the last 22 layers will give us a pretty 
+decently performing model, so let's go with that. Feel free to play around with this to see how
+freezing and unfreezing layers can change model performance!
+
+So the twenty-third-to-last layer and all layers after it will be trained when we fit the model on 
+the new data set. All layers above will not be trained, so their original ImageNet weights 
+will stay in place.
+'''
+
+for layer in fine_tune_Mobilenet.layers[:-22]:
+    layer.trainable = False
+
+print(fine_tune_Mobilenet.summary())
+
+# Compile the Model
+
+fine_tune_Mobilenet.compile(optimizer=Adam(learning_rate=0.0001), loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Train the Model
+
+fine_tune_Mobilenet.fit(x=train_batches,
+            steps_per_epoch=len(train_batches),
+            validation_data=valid_batches,
+            validation_steps=len(valid_batches),
+            epochs=10,
+            verbose=2
+)
+
+########################################################################
+# Perform Inference and Check Results
+########################################################################
+
+# Get test labels by grabbing the classes from the unshuffled test set.
+
+test_labels = test_batches.classes
+
+# Run predictions
+
+predictions = fine_tune_Mobilenet.predict(x=test_batches, steps=len(test_batches), verbose=0)
+
+# Create the Confusion Matrix
+
+cm = confusion_matrix(y_true=test_labels, y_pred=predictions.argmax(axis=1))
+
+'''
+Now we are printing the class_indices from our test_batches so that we can see the order of the classes and 
+specify them in that same order when we create the labels for our confusion matrix.
+If you know the class indices already, no need to do this
+'''
+print(test_batches.class_indices)
+
+cm_plot_labels = ['0','1','2','3','4','5','6','7','8','9']
+plot_confusion_matrix(cm=cm, classes=cm_plot_labels, title='Confusion Matrix')
+
+# finaL step, save the model for later!
+
+fine_tune_Mobilenet.save('models/Fine_Tune_SL_RGB_MobileNet.h5')

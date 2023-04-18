@@ -45,12 +45,8 @@ mobile.save('models/MobileNet.h5')
 #print(mobile.summary())
 
 ########################################################################
-# Organize the RGB Data
+# Organize the RGB Data into Directories and Datasets
 ########################################################################
-
-# Once this code has been run on the downloaded dataset, it can be commented out
-
-# Organize data into train, valid, test dirs
 
 '''
 First, we create train, valid, and test directories.
@@ -62,6 +58,9 @@ the corresponding class directory in valid and 5 images from each class into the
 
 Finally, we end by moving back into the current directory (Not necessary if not using a Jupyter Notebook).
 '''
+
+# Once this code has been run on the downloaded dataset, it can be commented out
+
 os.chdir('Data/Sign_Language_Digits_Dataset_RGB')
 if os.path.isdir('train/0/') is False:
     os.mkdir('train')
@@ -88,6 +87,7 @@ and test sets in the exact same way as we did for the cat and dog data set in th
 Files.
 
 '''
+
 
 train_path = 'Data/Sign_Language_Digits_Dataset_RGB/train'
 valid_path = 'Data/Sign_Language_Digits_Dataset_RGB/valid'
@@ -116,3 +116,4 @@ which causes the test dataset to not be shuffled, so that we can access the corr
 to plot to a confusion matrix later.
 
 '''
+
